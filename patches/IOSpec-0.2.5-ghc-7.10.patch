@@ -1,0 +1,80 @@
+diff --git a/src/Test/IOSpec/STM.hs b/src/Test/IOSpec/STM.hs
+index f9e4742..cbe291a 100644
+--- a/src/Test/IOSpec/STM.hs
++++ b/src/Test/IOSpec/STM.hs
+@@ -22,6 +22,8 @@ import Test.IOSpec.VirtualMachine
+ import Test.IOSpec.Types
+ import Data.Dynamic
+ import Data.Maybe (fromJust)
++import Control.Applicative
++import Control.Monad
+ import Control.Monad.State
+ 
+ -- The 'STMS' data type and its instances.
+@@ -67,6 +69,10 @@ instance Functor STM where
+   fmap _ Retry              = Retry
+   fmap f (OrElse io1 io2)   = OrElse (fmap f io1) (fmap f io2)
+ 
++instance Applicative STM where
++  pure = return
++  (<*>) = ap
++
+ instance Monad STM where
+     return                = STMReturn
+     STMReturn a >>= f     = f a
+diff --git a/src/Test/IOSpec/Types.hs b/src/Test/IOSpec/Types.hs
+index d268ce7..015bcb3 100644
+--- a/src/Test/IOSpec/Types.hs
++++ b/src/Test/IOSpec/Types.hs
+@@ -15,6 +15,9 @@ module Test.IOSpec.Types
+   , inject
+   ) where
+ 
++import Control.Applicative
++import Control.Monad
++
+ -- | A value of type 'IOSpec' @f@ @a@ is either a pure value of type @a@
+ -- or some effect, determined by @f@. Crucially, 'IOSpec' @f@ is a
+ -- monad, provided @f@ is a functor.
+@@ -26,6 +29,10 @@ instance (Functor f) => Functor (IOSpec f) where
+   fmap f (Pure x)   = Pure (f x)
+   fmap f (Impure t) = Impure (fmap (fmap f) t)
+ 
++instance (Functor f) => Applicative (IOSpec f) where
++  pure = return
++  (<*>) = ap
++
+ instance (Functor f) => Monad (IOSpec f) where
+   return           = Pure
+   (Pure x) >>= f   = f x
+@@ -61,4 +68,4 @@ instance ((:<:) f g, Functor f, Functor g, Functor h)
+     inj = Inr . inj
+ 
+ inject :: (g :<: f) => g (IOSpec f a) -> IOSpec f a
+-inject = Impure . inj
+\ No newline at end of file
++inject = Impure . inj
+diff --git a/src/Test/IOSpec/VirtualMachine.hs b/src/Test/IOSpec/VirtualMachine.hs
+index 79fd89c..a97e112 100644
+--- a/src/Test/IOSpec/VirtualMachine.hs
++++ b/src/Test/IOSpec/VirtualMachine.hs
+@@ -37,6 +37,8 @@ module Test.IOSpec.VirtualMachine
+   )
+   where
+ 
++import Control.Applicative
++import Control.Monad
+ import Control.Monad.State
+ import Data.Dynamic
+ import Data.List
+@@ -211,6 +213,10 @@ instance Functor Effect where
+   fmap f (Print c t) = Print c (fmap f t)
+   fmap _ (Fail msg) = Fail msg
+ 
++instance Applicative Effect where
++  pure = return
++  (<*>) = ap
++
+ instance Monad Effect where
+   return = Done
+   (Done x) >>= f = f x

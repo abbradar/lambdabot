@@ -1,0 +1,20 @@
+diff --git a/Language/Brainfuck.hs b/Language/Brainfuck.hs
+index 26a53ca..6a25b09 100644
+--- a/Language/Brainfuck.hs
++++ b/Language/Brainfuck.hs
+@@ -19,6 +19,8 @@ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA -}
+ 
++{-# LANGUAGE FlexibleContexts #-}
++
+ module Language.Brainfuck where
+ 
+ import Data.Array.IO
+@@ -287,4 +289,4 @@ execute cmds n bf@(BF _ _ ip) = do
+ 
+ halt = if debug
+          then putStrLn "Machine Halted.\n"
+-         else putStrLn "\n"
+\ No newline at end of file
++         else putStrLn "\n"

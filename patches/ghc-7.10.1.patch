@@ -1,0 +1,66 @@
+commit cf81d378697037c266b813269979118e82d3dbc1
+Author: Bertram Felgenhauer <int-e@gmx.de>
+Date:   Fri Apr 3 00:01:17 2015 +0200
+
+    Add -fprint-unicode-syntax flag
+
+diff --git a/compiler/main/DynFlags.hs b/compiler/main/DynFlags.hs
+index 93c386c..3e4ef60 100644
+--- a/compiler/main/DynFlags.hs
++++ b/compiler/main/DynFlags.hs
+@@ -327,6 +327,7 @@ data GeneralFlag
+ 
+    | Opt_PrintExplicitForalls
+    | Opt_PrintExplicitKinds
++   | Opt_PrintUnicodeSyntax
+ 
+    -- optimisation opts
+    | Opt_CallArity
+@@ -1775,8 +1776,9 @@ lang_set dflags lang =
+             extensionFlags = flattenExtensionFlags lang (extensions dflags)
+           }
+ 
++-- | Check whether to use unicode syntax for output
+ useUnicodeSyntax :: DynFlags -> Bool
+-useUnicodeSyntax = xopt Opt_UnicodeSyntax
++useUnicodeSyntax = gopt Opt_PrintUnicodeSyntax
+ 
+ -- | Set the Haskell language standard to use
+ setLanguage :: Language -> DynP ()
+@@ -2972,6 +2974,7 @@ fFlags = [
+   flagGhciSpec "print-evld-with-show"         Opt_PrintEvldWithShow,
+   flagSpec "print-explicit-foralls"           Opt_PrintExplicitForalls,
+   flagSpec "print-explicit-kinds"             Opt_PrintExplicitKinds,
++  flagSpec "print-unicode-syntax"             Opt_PrintUnicodeSyntax,
+   flagSpec "prof-cafs"                        Opt_AutoSccsOnIndividualCafs,
+   flagSpec "prof-count-entries"               Opt_ProfCountEntries,
+   flagSpec "regs-graph"                       Opt_RegsGraph,
+diff --git a/docs/users_guide/flags.xml b/docs/users_guide/flags.xml
+index 994a2c2..10a1e76 100644
+--- a/docs/users_guide/flags.xml
++++ b/docs/users_guide/flags.xml
+@@ -48,6 +48,12 @@
+             <entry>-fno-print-explicit-kinds</entry>
+           </row>
+           <row>
++            <entry><option>-fprint-unicode-syntax</option></entry>
++            <entry>use unicode syntax when printing expressions, types and kinds</entry>
++            <entry>dynamic</entry>
++            <entry>-fno-print-unicode-syntax</entry>
++          </row>
++          <row>
+             <entry><option>-ferror-spans</option></entry>
+             <entry>output full span in error messages</entry>
+             <entry>dynamic</entry>
+diff --git a/ghc/InteractiveUI.hs b/ghc/InteractiveUI.hs
+index 7310dca..f8466df 100644
+--- a/ghc/InteractiveUI.hs
++++ b/ghc/InteractiveUI.hs
+@@ -2069,6 +2069,7 @@ showDynFlags show_all dflags = do
+                                         DynFlags.fFlags
+         flgs = [ Opt_PrintExplicitForalls
+                , Opt_PrintExplicitKinds
++               , Opt_PrintUnicodeSyntax
+                , Opt_PrintBindResult
+                , Opt_BreakOnException
+                , Opt_BreakOnError

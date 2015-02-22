@@ -1,0 +1,10 @@
+diff --git a/Text/EditDistance/STUArray.hs b/Text/EditDistance/STUArray.hs
+index 6c668d1..e653c8d 100644
+--- a/Text/EditDistance/STUArray.hs
++++ b/Text/EditDistance/STUArray.hs
+@@ -1,4 +1,4 @@
+-{-# LANGUAGE PatternGuards, ScopedTypeVariables, BangPatterns #-}
++{-# LANGUAGE PatternGuards, ScopedTypeVariables, BangPatterns, FlexibleContexts #-}
+ 
+ module Text.EditDistance.STUArray (
+         levenshteinDistance, levenshteinDistanceWithLengths, restrictedDamerauLevenshteinDistance, restrictedDamerauLevenshteinDistanceWithLengths

@@ -1,0 +1,27 @@
+diff --git a/Language/Unlambda.hs b/Language/Unlambda.hs
+index 9e82125..f05ad40 100644
+--- a/Language/Unlambda.hs
++++ b/Language/Unlambda.hs
+@@ -28,6 +28,8 @@ module Language.Unlambda where
+ #if !MIN_VERSION_base(4,6,0)
+ import Prelude hiding(catch)
+ #endif
++import Control.Applicative
++import Control.Monad
+ import Control.Exception (catch, IOException)
+ 
+ ------------------------------------------------------------------------
+@@ -85,6 +87,13 @@ newtype Eval a = Eval ((Maybe Char, Int) -> Cont a -> IO Exp)
+ 
+ type Cont a = (Maybe Char, Int) -> a -> IO Exp
+ 
++instance Functor Eval where
++  fmap = liftM
++
++instance Applicative Eval where
++  pure = return
++  (<*>) = ap
++
+ instance Monad Eval where
+ 
+   (Eval cp1) >>= f = Eval $ \dat1 cont2 ->
