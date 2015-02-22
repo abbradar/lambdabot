@@ -1,0 +1,21 @@
+diff --git a/Data/DList.hs b/Data/DList.hs
+index 2d166e9..405d939 100644
+--- a/Data/DList.hs
++++ b/Data/DList.hs
+@@ -5,6 +5,7 @@
+ #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
+ -- For the IsList instance:
+ {-# LANGUAGE TypeFamilies #-}
++{-# LANGUAGE Trustworthy #-}
+ #endif
+ 
+ -----------------------------------------------------------------------------
+@@ -66,7 +67,7 @@ import Text.Read (Lexeme(Ident), lexP, parens, prec, readPrec, readListPrec,
+ #if __GLASGOW_HASKELL__ >= 708
+ import GHC.Exts (IsList)
+ -- This is for the IsList methods, which conflict with fromList, toList:
+-import qualified GHC.Exts
++import qualified GHC.Exts (IsList(..))
+ #endif
+ 
+ #endif
