@@ -148,7 +148,7 @@ comp src = do
     -- careful with timeouts here. need a wrapper.
     trusted <- getConfig trustedPackages
     let ghcArgs = concat
-            [ ["-O", "-v0", "-c", "-Werror", "-fpackage-trust"]
+            [ ["-O", "-v0", "-c", "-Werror", "-fpackage-trust", "-dynamic"]
             , concat [["-trust", pkg] | pkg <- trusted]
             , [".L.hs"]
             ]
