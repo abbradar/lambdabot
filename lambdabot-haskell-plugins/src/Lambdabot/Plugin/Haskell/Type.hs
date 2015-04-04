@@ -57,7 +57,7 @@ runit s expr = query_ghci s expr >>= say
 --     the hard work! To get the type of foo, pipe
 
 theCommand :: [Char] -> [Char] -> [Char]
-theCommand cmd foo = cmd ++ " " ++ foo
+theCommand cmd foo = cmd ++ " (" ++ foo ++ ")"
 
 --     into GHCi and send any line matching
 
