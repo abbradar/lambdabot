@@ -17,6 +17,7 @@ import Control.Monad.State
 import qualified Data.ByteString.Char8 as P
 import Data.List
 import Data.List.Split
+import qualified Data.Map as M
 import qualified Data.Set as S
 import Network( connectTo, PortID(..) )
 import System.IO
@@ -160,11 +161,13 @@ online tag hostn portnum nickn ui = do
     modifyMS $ \ms -> ms{ password = Nothing }
     lb $ ircSignOn hostn (Nick tag nickn) pwd ui
     fin <- io $ SSem.new 0
+    ready <- io $ SSem.new 0
     lb . void . fork $ E.catch
-        (readerLoop tag nickn pongref sock)
+        (readerLoop tag nickn pongref sock ready)
         (\e@SomeException{} -> do
             errorM (show e)
-            io $ SSem.signal fin)
+            io $ SSem.signalN fin 2
+            io $ SSem.signal ready)
     lb . void . fork $ E.catch
         (pingPongDelay >> pingPongLoop tag hostn pongref sock)
         (\e@SomeException{} -> do
@@ -183,6 +186,19 @@ online tag hostn portnum nickn ui = do
                         retry
                     )
           retry
+    io $ SSem.wait ready
+    isbad <- io $ SSem.getValue fin
+    unless (isbad > 0) $ restoreChannels tag
+
+restoreChannels :: String -> IRC ()
+restoreChannels tag = do
+  chans <- lift $ gets ircChannels
+  forM_ (M.keys chans) $ \chan -> do
+      let cn = getCN chan
+      when (nTag cn == tag) $ lb $ E.catch (send $ joinChannel cn)
+          (\e@SomeException{} -> do
+                errorM (show e)
+                modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' })
 
 pingPongDelay :: LB ()
 pingPongDelay = io $ threadDelay 120000000
@@ -197,8 +213,8 @@ pingPongLoop tag hostn pongref sock = do
         then pingPongLoop tag hostn pongref sock
         else errorM "Ping timeout." >> remServer tag
 
-readerLoop :: String -> String -> IORef Bool -> Handle -> LB ()
-readerLoop tag nickn pongref sock = forever $ do
+readerLoop :: String -> String -> IORef Bool -> Handle -> SSem.SSem -> LB ()
+readerLoop tag nickn pongref sock ready = forever $ do
     line <- io $ hGetLine sock
     let line' = filter (`notElem` "\r\n") line
     if "PING " `isPrefixOf` line'
@@ -207,7 +223,9 @@ readerLoop tag nickn pongref sock = forever $ do
             let msg = decodeMessage tag nickn line'
             if ircMsgCommand msg == "PONG"
                 then io $ writeIORef pongref True
-                else received msg
+                else do
+                    when (ircMsgCommand msg == "001") $ io $ SSem.signal ready
+                    received msg
 
 sendMsg :: Handle -> MVar () -> IrcMessage -> IO ()
 sendMsg sock mv msg =
