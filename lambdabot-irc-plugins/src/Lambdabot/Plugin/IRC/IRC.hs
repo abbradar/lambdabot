@@ -13,9 +13,11 @@ import qualified Control.Concurrent.SSem as SSem
 import Control.Exception.Lifted as E (SomeException(..), throwIO, catch)
 import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.State
 import qualified Data.ByteString.Char8 as P
 import Data.List
 import Data.List.Split
+import qualified Data.Set as S
 import Network( connectTo, PortID(..) )
 import System.IO
 import System.Timeout.Lifted
@@ -39,6 +41,17 @@ ircPlugin = newModule
                     tag:hostn:portn:nickn:uix -> do
                         pn <- (PortNumber . fromInteger) `fmap` readM portn
                         lift (online tag hostn pn nickn (intercalate " " uix))
+                    _ -> say "Not enough parameters!"
+            }
+        , (command "irc-persist-connect")
+            { privileged = True
+            , help = say "irc-persist-connect tag host portnum nickname userinfo.  connect to an irc server and reconnect on network failures"
+            , process = \rest ->
+                case splitOn " " rest of
+                    tag:hostn:portn:nickn:uix -> do
+                        pn <- (PortNumber . fromInteger) `fmap` readM portn
+                        lift (online tag hostn pn nickn (intercalate " " uix))
+                        lift $ lift $ modify $ \state' -> state' { ircPersists = S.insert tag $ ircPersists state' }
                     _ -> say "Not enough parameters!"
             }
         , (command "irc-password")
@@ -146,16 +159,30 @@ online tag hostn portnum nickn ui = do
     pwd <- password `fmap` readMS
     modifyMS $ \ms -> ms{ password = Nothing }
     lb $ ircSignOn hostn (Nick tag nickn) pwd ui
+    fin <- io $ SSem.new 0
     lb . void . fork $ E.catch
         (readerLoop tag nickn pongref sock)
         (\e@SomeException{} -> do
             errorM (show e)
-            remServer tag)
+            io $ SSem.signal fin)
     lb . void . fork $ E.catch
         (pingPongDelay >> pingPongLoop tag hostn pongref sock)
         (\e@SomeException{} -> do
             errorM (show e)
-            remServer tag)
+            io $ SSem.signal fin)
+    void . fork $ do
+        io $ SSem.wait fin
+        lb $ remServer tag
+        continue <- lift $ gets (S.member tag . ircPersists)
+        when continue $ do
+          let retry = do
+                io $ threadDelay 10000000
+                E.catch (online tag hostn portnum nickn ui)
+                    (\e@SomeException{} -> do
+                        errorM (show e)
+                        retry
+                    )
+          retry
 
 pingPongDelay :: LB ()
 pingPongDelay = io $ threadDelay 120000000

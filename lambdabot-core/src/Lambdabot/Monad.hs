@@ -112,6 +112,7 @@ data IRCRWState = IRCRWState
     
     , ircChannels        :: M.Map ChanName String
     -- ^ maps channel names to topics
+    , ircPersists        :: S.Set String
     
     , ircModules         :: M.Map String ModuleRef
     , ircCallbacks       :: M.Map String [(String,Callback)]
@@ -119,7 +120,6 @@ data IRCRWState = IRCRWState
     -- ^ Output filters, invoked from right to left
     
     , ircCommands        :: M.Map String CommandRef
-    , ircStayConnected   :: !Bool
     }
 
 -- | Default rw state
@@ -128,6 +128,7 @@ initRwState = IRCRWState
     { ircPrivilegedUsers = S.singleton (Nick "offlinerc" "null")
     , ircIgnoredUsers    = S.empty
     , ircChannels        = M.empty
+    , ircPersists        = S.empty
     , ircModules         = M.empty
     , ircServerMap       = M.empty
     , ircCallbacks       = M.empty
@@ -137,7 +138,6 @@ initRwState = IRCRWState
         , ([],cleanOutput)
         ]
     , ircCommands        = M.empty
-    , ircStayConnected   = True
     }
 
 
