@@ -101,8 +101,6 @@ systemPlugin = newModule
             , help = say "quit [msg], have the bot exit with msg"
             , process = \rest -> do
                 server <- getServer
-                lift $ lift $ modify $ \s ->
-                    s { ircPersists = S.delete server $ ircPersists s }
                 lb (ircQuit server $ if null rest then "requested" else rest)
             }
         , (command "flush")

@@ -15,7 +15,7 @@ import Control.Monad( void, when )
 import Control.Monad.State( gets, modify )
 import Control.Monad.Trans( lift, liftIO )
 import Data.Char
-import qualified Data.Set as S
+import qualified Data.Map as M
 import System.Console.Haskeline (InputT, Settings(..), runInputT, defaultSettings, getInputLine)
 import System.IO
 import System.Timeout.Lifted
@@ -91,7 +91,7 @@ replLoop = do
             let s' = dropWhile isSpace x
             when (not $ null s') $ do
                 lift $ feed s'
-            continue <- lift $ lift $ gets (S.member "offlinerc" . ircPersists)
+            continue <- lift $ lift $ gets (M.member "offlinerc" . ircPersists)
             when continue replLoop
 
 lockRC :: OfflineRC ()
@@ -100,7 +100,7 @@ lockRC = do
         when (cur == 0) $ do
           addServer "offlinerc" handleMsg
           lift $ modify $ \state' ->
-              state' { ircPersists = S.insert "offlinerc" $ ircPersists state' }
+              state' { ircPersists = M.insert "offlinerc" True $ ircPersists state' }
         writ (cur + 1)
 
 unlockRC :: OfflineRC ()

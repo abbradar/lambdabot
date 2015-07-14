@@ -134,7 +134,19 @@ doTOPIC msg
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ ircMsgParams msg) (ircChannels s)})
 
 doRPL_WELCOME :: Callback
-doRPL_WELCOME = doIGNORE
+doRPL_WELCOME msg
+    = do modify $ \state' -> let persists = if M.findWithDefault True (server msg) (ircPersists state')
+                                            then ircPersists state'
+                                            else M.delete (server msg) $ ircPersists state'
+                             in state' { ircPersists = persists }
+         chans <- gets ircChannels
+         forM_ (M.keys chans) $ \chan -> do
+             let cn = getCN chan
+             when (nTag cn == server msg) $ lb $ E.catch (send $ joinChannel cn)
+                 (\e@SomeException{} -> do
+                     errorM (show e)
+                     modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' }
+                 )
 
 doQUIT :: Callback
 doQUIT msg = doIGNORE msg
