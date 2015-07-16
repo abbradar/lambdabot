@@ -163,20 +163,20 @@ online tag hostn portnum nickn ui = do
       lb $ ircSignOn hostn (Nick tag nickn) pwd ui
       fin <- io $ SSem.new 0
       ready <- io $ SSem.new 0
-      lb . void . fork $ E.catch
-          (readerLoop tag nickn pongref sock ready)
-          (\e@SomeException{} -> do
-              errorM (show e)
-              io $ SSem.signal fin
-              io $ SSem.signal ready)
-      lb . void . fork $ E.catch
-          (pingPongDelay >> pingPongLoop tag hostn pongref sock)
-          (\e@SomeException{} -> do
-              errorM (show e)
-              io $ SSem.signal fin)
-      void . fork $ do
+      lb $ void $ forkFinally
+          (E.catch
+              (readerLoop tag nickn pongref sock ready)
+              (\e@SomeException{} -> errorM (show e)))
+          (const $ io $ SSem.signal fin)
+      lb $ void $ forkFinally
+          (E.catch
+              (pingPongDelay >> pingPongLoop tag hostn pongref sock)
+              (\e@SomeException{} -> errorM (show e)))
+          (const $ io $ SSem.signal fin)
+      void $ fork $ do
           io $ SSem.wait fin
-          lb $ remServer tag
+          void $ lb $ remServer tag
+          io $ SSem.signal ready
           let retry = do
               continue <- lift $ gets (M.member tag . ircPersists)
               when continue $ do
@@ -187,7 +187,12 @@ online tag hostn portnum nickn ui = do
                           retry
                       )
           retry
+      watch <- io $ fork $ do
+          threadDelay 10000000
+          errorM "Welcome timeout!"
+          hClose sock
       io $ SSem.wait ready
+      killThread watch
 
   online'
 
@@ -202,7 +207,7 @@ pingPongLoop tag hostn pongref sock = do
     pong <- io $ readIORef pongref
     if pong
         then pingPongLoop tag hostn pongref sock
-        else errorM "Ping timeout." >> remServer tag
+        else errorM "Ping timeout."
 
 readerLoop :: String -> String -> IORef Bool -> Handle -> SSem.SSem -> LB ()
 readerLoop tag nickn pongref sock ready = forever $ do
