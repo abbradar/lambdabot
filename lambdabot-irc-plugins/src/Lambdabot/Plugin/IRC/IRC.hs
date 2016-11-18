@@ -81,18 +81,12 @@ encodeMessage msg
           . encodeParams (ircMsgParams msg)
   where
     encodePrefix [] = id
-    encodePrefix prefix = showChar ':' . showString' prefix . showChar ' '
+    encodePrefix prefix = showChar ':' . showString prefix . showChar ' '
 
     encodeCommand cmd = showString cmd
 
     encodeParams [] = id
-    encodeParams (p:ps) = showChar ' ' . showString' p . encodeParams ps
-
-    -- IrcMessage is supposed to contain strings that are lists of bytes, but
-    -- if a plugin messes up the encoding then we may end up with arbitrary
-    -- Unicode codepoints. This is dangerous (\x10a would produce a newline!),
-    -- so we sanitize the message here.
-    showString' = showString . map (\c -> if c > '\xFF' then '?' else c)
+    encodeParams (p:ps) = showChar ' ' . showString p . encodeParams ps
 
 -- | 'decodeMessage' Takes an input line from the IRC protocol stream
 --   and decodes it into a message.  TODO: this has too many parameters.
@@ -151,6 +145,7 @@ online tag hostn portnum nickn ui = do
     let online' = do
         sock    <- io $ connectTo hostn portnum
         io $ hSetBuffering sock NoBuffering
+        io $ hSetEncoding sock utf8
         -- Implements flood control: RFC 2813, section 5.8
         sem1    <- io $ SSem.new 0
         sem2    <- io $ SSem.new 4 -- one extra token stays in the MVar
