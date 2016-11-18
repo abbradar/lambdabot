@@ -4,7 +4,6 @@ module Lambdabot.Plugin.Haskell
     , evalPlugin
     , freePlugin
     , haddockPlugin
-    , hooglePlugin
     , instancesPlugin
     , plPlugin
     , pointfulPlugin
@@ -25,7 +24,6 @@ import Lambdabot.Plugin.Haskell.Djinn
 import Lambdabot.Plugin.Haskell.Eval
 import Lambdabot.Plugin.Haskell.Free
 import Lambdabot.Plugin.Haskell.Haddock
-import Lambdabot.Plugin.Haskell.Hoogle
 import Lambdabot.Plugin.Haskell.Instances
 import Lambdabot.Plugin.Haskell.Pl
 import Lambdabot.Plugin.Haskell.Pointful
@@ -36,5 +34,5 @@ import Lambdabot.Plugin.Haskell.Undo
 import Lambdabot.Plugin.Haskell.UnMtl
 
 haskellPlugins :: [String]
-haskellPlugins = ["check", "djinn", "eval", "free", "haddock", "hoogle", "instances",
+haskellPlugins = ["check", "djinn", "eval", "free", "haddock", "instances",
                   "pl", "pointful", "pretty", "source", "type", "undo", "unmtl"]

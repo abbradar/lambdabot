@@ -10,7 +10,6 @@ module Lambdabot.Config.Haskell
     , djinnBinary
     , ghcBinary
     , ghciBinary
-    , hoogleBinary
     , muevalBinary
 
     , maxPasteLength
@@ -46,7 +45,6 @@ configWithMerge [| (++) |] "languageExts"   [t| [String] |] [| defaultExts |]
 config "djinnBinary"        [t| String                  |] [| "djinn"       |]
 config "ghcBinary"          [t| String                  |] [| "ghc"         |]
 config "ghciBinary"         [t| String                  |] [| "ghci"        |]
-config "hoogleBinary"       [t| String                  |] [| "hoogle"      |]
 config "muevalBinary"       [t| String                  |] [| "mueval"      |]
 
 config "maxPasteLength"     [t| Int                     |] [| 4096 :: Int   |]

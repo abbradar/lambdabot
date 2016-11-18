@@ -24,8 +24,6 @@ description:            Lambdabot is an IRC bot written over several years by
                         .
                         [haddock] Find modules implementing a function.
                         .
-                        [hoogle] Search for functions by type using hoogle.
-                        .
                         [instances] Query instances of type classes.
                         .
                         [pl] Produce point-less code.
@@ -73,7 +71,6 @@ library
                         Lambdabot.Plugin.Haskell.Free.Type
                         Lambdabot.Plugin.Haskell.Free.Util
                         Lambdabot.Plugin.Haskell.Haddock
-                        Lambdabot.Plugin.Haskell.Hoogle
                         Lambdabot.Plugin.Haskell.Instances
                         Lambdabot.Plugin.Haskell.Pl
                         Lambdabot.Plugin.Haskell.Pl.Common
@@ -117,7 +114,6 @@ library
                         -- runtime dependencies - for eval etc.
                         arrows                  >= 0.4,
                         data-memocombinators    >= 0.4,
-                        hoogle                  >= 4.2,
                         IOSpec                  >= 0.2,
                         lambdabot-trusted       >= 5.1 && < 5.2,
                         logict                  >= 0.5,
